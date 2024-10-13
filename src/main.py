@@ -25,6 +25,8 @@ class Umfrage:
         Cleans the Data from trash
         """
         self._drop_colum('Zeitstempel')
+        self._stichprobe_liste['Status'].replace("Ja, ich habe ein 3a-Konto und ich bezahle ein.", "Besitzt ein 3a Konto", inplace=True)
+        self._stichprobe_liste['Status'].replace("Nein, ich habe entweder kein Säule 3a-Konto oder ich zahle nicht ein.", "Besitzt kein ein 3a Konto", inplace=True)
 
     def std_abweichung(self, merkmal: str) -> int:
         return self._stichprobe_liste[merkmal].std()
@@ -32,8 +34,8 @@ class Umfrage:
     def kennzahlen(self, merkmal: str) -> list[str]:
         werte: list[str] = []
 
-        werte.append("\nArt. Mittel: " +
-                     str(self._stichprobe_liste[merkmal].mean()))
+        werte.append("\nAth. Mittel: " +
+                     str(round(self._stichprobe_liste[merkmal].mean(), 3)))
         werte.append("\nMedian: " +
                      str(self._stichprobe_liste[merkmal].median()))
         werte.append(
@@ -42,9 +44,9 @@ class Umfrage:
             "\nQ1: " + str(self._stichprobe_liste[merkmal].quantile(.25)))
         werte.append(
             "\nQ3: " + str(self._stichprobe_liste[merkmal].quantile(.75)))
-        werte.append("\nStd: " + str(self._stichprobe_liste[merkmal].std()))
-        werte.append("\nVarianz: " +
-                     str(self._stichprobe_liste[merkmal].var()))
+        werte.append("\ns: " + str(round(self._stichprobe_liste[merkmal].std(), 3)))
+        werte.append("\nV: " +
+                     str(round(self._stichprobe_liste[merkmal].var(),)))
         return werte
 
     def status_der_konten(self) -> pandas.Series:
@@ -53,8 +55,8 @@ class Umfrage:
 
     def alter_der_konten(self) -> pandas.Series:
         merkmal: str = "Eroeffnung"
-        bins = pandas.IntervalIndex.from_tuples([(17.5,25.5),(25.5,35.5),(35.5,55.5),(55.5,64.5),(64.5,99)])
-        return pandas.cut(self._stichprobe_liste[merkmal], bins).value_counts()
+        bins = pandas.IntervalIndex.from_tuples([(18, 25), (26, 35), (36, 55), (56, 64), (65, 99)], closed="both")
+        return pandas.cut(self._stichprobe_liste[merkmal], bins).value_counts(sort=False)
 
 
 def export_to_file(file_path: str, file_content: str | list[str]) -> None:
@@ -66,14 +68,14 @@ def export_to_file(file_path: str, file_content: str | list[str]) -> None:
             export_file.writelines(file_content)
 
 
-def export_to_graph(file_path: str, graph_content):
-    raise NotImplementedError
-
-
 def export_to_bar(file_path: str, data: pandas.Series) -> None:
     # TODO: plot beautifier
-    plt.bar(data.index.astype(str), data.values)
-    plt.savefig(fname=file_path, format='svg')
+    filetype: str = 'png'
+    figure, axes = plt.subplots()
+    axes.bar(data.index.astype(str), data.values, label="Test")
+    axes.set_ylabel("Anzahl #")
+    axes.set_title("Test")
+    plt.savefig(fname=file_path + "." + filetype, format=filetype)
     plt.close()
 
 
@@ -84,15 +86,27 @@ def export_to_boxplot(file_path: str, data: pandas.Series) -> None:
 
 
 def exports_alter(ida_2024: Umfrage) -> None:
-    export_to_file(PATH_TO_EXPORT + "alter_values.txt",
-                   ida_2024.kennzahlen("Alter"))
-    export_to_boxplot(PATH_TO_EXPORT + "alter-boxplot.svg",
+    axes = plt.subplot()
+    axes.bar(ida_2024.status_der_konten().index.astype(str), ida_2024.status_der_konten().values, label="Status der Konten")
+    axes.set_ylabel("Anzahl [#]")
+    axes.set_title("Wie viele haben ein Konto")
+    axes.text(s=ida_2024.kennzahlen("Alter")[5], x=2, y=17.5)
+    plt.savefig(fname= PATH_TO_EXPORT + "Status_Konten.png", format='png')
+    plt.close()
+    export_to_boxplot(PATH_TO_EXPORT + "alter-boxplot",
                       ida_2024._stichprobe_liste["Alter"])
 
 
 def export_alter_konto(ida_2024: Umfrage) -> None:
-    export_to_bar(PATH_TO_EXPORT + "konto-alter_values.svg", ida_2024.alter_der_konten())
-    print(ida_2024.alter_der_konten())
+    axes = plt.subplot()
+    axes.bar(ida_2024.alter_der_konten().index.astype(str), ida_2024.alter_der_konten().values, label="Kontoeröffnungsjahr")
+    axes.set_ylabel("Anzahl der Konten (#)")
+    axes.set_title("Eröffnungsjahr von 3a-Konten")
+    axes.set_xlabel("Zeitintervall in Altersjahren [Δj]")
+    axes.text(s=ida_2024.kennzahlen("Eroeffnung")[5], x=2, y=6)
+    plt.savefig(fname=PATH_TO_EXPORT + "alter_errofnung.svg",format='svg')
+    plt.close()
+
     export_to_file(PATH_TO_EXPORT + "konto-alter_values.txt",
                    ida_2024.kennzahlen("Eroeffnung"))
 
@@ -100,7 +114,7 @@ def export_alter_konto(ida_2024: Umfrage) -> None:
 def exports_konto_status(ida_2024: Umfrage) -> None:
     export_to_file(PATH_TO_EXPORT + "status_konten.txt",
                    ida_2024.status_der_konten().to_string())
-    export_to_bar(PATH_TO_EXPORT + "status_konten.svg",
+    export_to_bar(PATH_TO_EXPORT + "status_konten",
                   ida_2024.status_der_konten())
 
 
