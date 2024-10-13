@@ -1,0 +1,4 @@
+Status
+Besitzt ein 3a Konto         19
+Besitzt kein ein 3a Konto     7
+Ich weiss nicht               1
