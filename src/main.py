@@ -7,6 +7,8 @@ PATH_TO_EXPORT = "../export/"
 
 class Umfrage:
     _stichprobe_liste: pandas.DataFrame
+    # Ist ein Ansatz um die multiple choice Antworten zu erhalten, müsste man halt nachtragen, da Benutzer selbst weitere Angaben machen können :(
+    _ziele = ["Altersvorsorge", "Steuern sparen", "Kapital aufbauen für Eigenheim Erwerb", "Kapital aufbauen für Auswanderung", "Kapital aufbauen für Firmengründung", "Gewinn durch Anlegen in Aktien"]
 
     def __init__(self, path_to_data: str) -> None:
         self._stichprobe_liste = pandas.read_csv(path_to_data)
@@ -58,6 +60,17 @@ class Umfrage:
         bins = pandas.IntervalIndex.from_tuples([(18, 25), (26, 35), (36, 55), (56, 64), (65, 99)], closed="both")
         return pandas.cut(self._stichprobe_liste[merkmal], bins).value_counts(sort=False)
 
+    def ziele_der_konten(self) -> pandas.Series:
+        '''Iterates over all rows and the values in the rows and looks out for goals from the _ziele list to add the goals to the result set'''
+        collected_data = []
+        for _, row in self._stichprobe_liste.iterrows():
+            for value in row :
+                if value in self._ziele:
+                    collected_data.append(value)
+
+        return pandas.Series(collected_data).value_counts()
+        
+
 
 def export_to_file(file_path: str, file_content: str | list[str]) -> None:
     try:
@@ -75,6 +88,17 @@ def export_to_bar(file_path: str, data: pandas.Series) -> None:
     axes.bar(data.index.astype(str), data.values, label="Test")
     axes.set_ylabel("Anzahl #")
     axes.set_title("Test")
+    plt.savefig(fname=file_path + "." + filetype, format=filetype)
+    plt.close()
+
+def export_to_horizontal_bar(file_path: str, data: pandas.Series) -> None:
+    # TODO: plot beautifier
+    filetype: str = 'png'
+    figure, axes = plt.subplots(figsize=(10, 8)) # figsize adjusts the width and height of the diagram
+    axes.barh(data.index.astype(str), data.values, label="Test")
+    axes.set_xlabel("Anzahl #")
+    axes.set_title("Test")
+    plt.tight_layout() # solves the problem of clipped names
     plt.savefig(fname=file_path + "." + filetype, format=filetype)
     plt.close()
 
@@ -118,6 +142,14 @@ def exports_konto_status(ida_2024: Umfrage) -> None:
                   ida_2024.status_der_konten())
 
 
+def exports_konto_ziele(ida_2024: Umfrage) -> None:
+    export_to_file(PATH_TO_EXPORT + "ziele_konten.txt",
+                   ida_2024.ziele_der_konten().to_string())
+    export_to_horizontal_bar(PATH_TO_EXPORT + "ziele_konten",
+                   ida_2024.ziele_der_konten())
+    
+
+
 def main():
     # Globale Pfade
 
@@ -128,6 +160,7 @@ def main():
     exports_konto_status(ida_2024)
     exports_alter(ida_2024)
     export_alter_konto(ida_2024)
+    exports_konto_ziele(ida_2024)
 
 
 if __name__ == "__main__":
