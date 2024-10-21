@@ -1,5 +1,7 @@
-Altersvorsorge                           18
-Steuern sparen                           18
-Kapital aufbauen für Eigenheim Erwerb     4
-Gewinn durch Anlegen in Aktien            1
-Kapital aufbauen für Firmengründung       1
+Motive-Konto
+[Altersvorsorge,  Steuern sparen]                                                                                  14
+[Altersvorsorge,  Steuern sparen,  Kapital aufbauen fÃ¼r Eigenheim Erwerb]                                           2
+[Altersvorsorge]                                                                                                    2
+[Steuern sparen]                                                                                                    1
+[Altersvorsorge,  Steuern sparen,  Kapital aufbauen fÃ¼r Eigenheim Erwerb,  Kapital aufbauen fÃ¼r FirmengrÃ¼ndung]     1
+[Altersvorsorge,  Steuern sparen,  Kapital aufbauen fÃ¼r Eigenheim Erwerb,  Gewinn durch Anlegen in Aktien]          1

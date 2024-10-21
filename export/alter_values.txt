@@ -1,8 +1,0 @@
-
-Art. Mittel: 37.778
-Median: 34.0
-Modus: [22]
-Q1: 23.0
-Q3: 54.5
-Std: 15.162
-Varianz: 230

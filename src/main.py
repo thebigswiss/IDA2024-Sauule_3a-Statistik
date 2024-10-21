@@ -7,11 +7,9 @@ PATH_TO_EXPORT = "../export/"
 
 class Umfrage:
     _stichprobe_liste: pandas.DataFrame
-    # Ist ein Ansatz um die multiple choice Antworten zu erhalten, müsste man halt nachtragen, da Benutzer selbst weitere Angaben machen können :(
-    _ziele = ["Altersvorsorge", "Steuern sparen", "Kapital aufbauen für Eigenheim Erwerb", "Kapital aufbauen für Auswanderung", "Kapital aufbauen für Firmengründung", "Gewinn durch Anlegen in Aktien"]
 
     def __init__(self, path_to_data: str) -> None:
-        self._stichprobe_liste = pandas.read_csv(path_to_data)
+        self._stichprobe_liste = pandas.read_csv(path_to_data, delimiter="	")
 
     def print_to_cmd(self) -> None:
         print(self._stichprobe_liste.to_string())
@@ -27,8 +25,18 @@ class Umfrage:
         Cleans the Data from trash
         """
         self._drop_colum('Zeitstempel')
+        self._stichprobe_liste = self._stichprobe_liste.rename(
+            {"Bitte geben Sie Ihr Alter in Jahren an" : 'Alter',
+             "Besitzen Sie ein Säule 3a-Konto und zahlen ein?": 'Status',
+             "In welchem Alter haben Sie zum ersten mal auf Ihr Säule 3a-Konto eingezahlt.":'Eroeffnung',
+             "Was möchten Sie mit Ihrem Säule 3a-Konto erreichen?" : 'Motive-Konto',
+             "Wie wichtig ist Ihr Säule 3a-Konto für Ihre Altersvorsorge?" : 'Wichtigkeit_Konto',
+             "Aus welchen Gründen haben Sie kein Säule 3a-Konto?" : 'Motive_kein_Konto',
+             "Wie wahrscheinlich ist es, dass Sie in den nächsten 5 Jahren ein 3a-Konto eröffnen?":'konto_zukunft',
+             "Wie wichtig ist die Altersvorsorge für Sie generell?":'Wichtigkeit_Generell'}, axis='columns')
         self._stichprobe_liste['Status'].replace("Ja, ich habe ein 3a-Konto und ich bezahle ein.", "Besitzt ein 3a Konto", inplace=True)
         self._stichprobe_liste['Status'].replace("Nein, ich habe entweder kein Säule 3a-Konto oder ich zahle nicht ein.", "Besitzt kein ein 3a Konto", inplace=True)
+        print(self._stichprobe_liste)
 
     def std_abweichung(self, merkmal: str) -> int:
         return self._stichprobe_liste[merkmal].std()
@@ -61,15 +69,8 @@ class Umfrage:
         return pandas.cut(self._stichprobe_liste[merkmal], bins).value_counts(sort=False)
 
     def ziele_der_konten(self) -> pandas.Series:
-        '''Iterates over all rows and the values in the rows and looks out for goals from the _ziele list to add the goals to the result set'''
-        collected_data = []
-        for _, row in self._stichprobe_liste.iterrows():
-            for value in row :
-                if value in self._ziele:
-                    collected_data.append(value)
-
-        return pandas.Series(collected_data).value_counts()
-        
+        merkmal: str = 'Motive-Konto'
+        return self._stichprobe_liste[merkmal].value_counts()
 
 
 def export_to_file(file_path: str, file_content: str | list[str]) -> None:
@@ -90,6 +91,7 @@ def export_to_bar(file_path: str, data: pandas.Series) -> None:
     axes.set_title("Test")
     plt.savefig(fname=file_path + "." + filetype, format=filetype)
     plt.close()
+
 
 def export_to_horizontal_bar(file_path: str, data: pandas.Series) -> None:
     # TODO: plot beautifier
@@ -154,7 +156,7 @@ def main():
     # Globale Pfade
 
     # Instanziert die Klasse und bereinigt die Daten
-    ida_2024: Umfrage = Umfrage(PATH_TO_DATA + "urliste.csv")
+    ida_2024: Umfrage = Umfrage(PATH_TO_DATA + "urliste.tsv")
     ida_2024.clean_data()
     # Exportiert die Daten in externe Files für das verwenden in der Dokumenation.
     exports_konto_status(ida_2024)
