@@ -1,5 +1,6 @@
 import pandas
 import matplotlib.pyplot as plt
+import scipy
 
 PATH_TO_DATA = "../urliste/"
 PATH_TO_EXPORT = "../export/"
@@ -72,6 +73,12 @@ class Umfrage:
         merkmal: str = 'Motive-Konto'
         return self._stichprobe_liste[merkmal].value_counts()
 
+    def regressions_gerade(self, merkmalA: str, merkmalB: str): # öppis komplizierts luäg i doku
+        # y = a*x + b
+        stichbrobe_liste = self._stichprobe_liste.dropna(subset=[merkmalA, merkmalB])
+        a, b, r, _, _ = scipy.stats.linregress(stichbrobe_liste[merkmalA].values, stichbrobe_liste[merkmalB].values)
+        return lambda x : (a * x) + b, f"r: {r}"
+
 
 def export_to_file(file_path: str, file_content: str | list[str]) -> None:
     try:
@@ -80,6 +87,20 @@ def export_to_file(file_path: str, file_content: str | list[str]) -> None:
     except TypeError:
         with open(file_path, "w") as export_file:
             export_file.writelines(file_content)
+
+def export_corr_graph_alter(file_path: str, dataX: pandas.Series, dataY: pandas.Series, gerade) -> None:
+    filetype: str = 'png'
+    figure, axes = plt.subplots()
+    axes.plot(dataX.values, dataY.values, label="Test", linewidth=0, marker='s')
+    axes.plot(dataX.values, gerade[0](dataX.values))
+    axes.set_title("Regressrion Alter zu Eröffnungsalter")
+    axes.set_xlabel("Alter")
+    axes.set_ylabel("Eröffnung")
+    axes.set_xlim([0,70])
+    axes.set_ylim([0,70])
+    axes.text(s=gerade[1],x=40,y=50)
+    plt.savefig(fname=file_path + "." + filetype, format=filetype)
+    plt.close()
 
 
 def export_to_bar(file_path: str, data: pandas.Series) -> None:
@@ -109,6 +130,9 @@ def export_to_boxplot(file_path: str, data: pandas.Series) -> None:
     plt.boxplot(data.values)
     plt.savefig(fname=file_path, format='svg')
     plt.close()
+
+def export_corr(ida_2024: Umfrage) -> None:
+    pass
 
 
 def exports_alter(ida_2024: Umfrage) -> None:
@@ -163,6 +187,9 @@ def main():
     exports_alter(ida_2024)
     export_alter_konto(ida_2024)
     exports_konto_ziele(ida_2024)
+    test = ida_2024.regressions_gerade("Alter","Eroeffnung")
+    #print(test(ida_2024._stichprobe_liste["Alter"].values))
+    export_corr_graph_alter(PATH_TO_EXPORT + "Test", ida_2024._stichprobe_liste["Alter"], ida_2024._stichprobe_liste["Eroeffnung"], ida_2024.regressions_gerade("Alter","Eroeffnung"))
 
 
 if __name__ == "__main__":

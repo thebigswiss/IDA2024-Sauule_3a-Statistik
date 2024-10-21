@@ -1,7 +1,7 @@
 Motive-Konto
-[Altersvorsorge,  Steuern sparen]                                                                                  14
-[Altersvorsorge,  Steuern sparen,  Kapital aufbauen für Eigenheim Erwerb]                                           2
-[Altersvorsorge]                                                                                                    2
-[Steuern sparen]                                                                                                    1
-[Altersvorsorge,  Steuern sparen,  Kapital aufbauen für Eigenheim Erwerb,  Kapital aufbauen für Firmengründung]     1
-[Altersvorsorge,  Steuern sparen,  Kapital aufbauen für Eigenheim Erwerb,  Gewinn durch Anlegen in Aktien]          1
+Altersvorsorge, Steuern sparen                                                                                14
+Altersvorsorge, Steuern sparen, Kapital aufbauen für Eigenheim Erwerb                                          2
+Altersvorsorge                                                                                                 2
+Steuern sparen                                                                                                 1
+Altersvorsorge, Steuern sparen, Kapital aufbauen für Eigenheim Erwerb, Kapital aufbauen für Firmengründung     1
+Altersvorsorge, Steuern sparen, Kapital aufbauen für Eigenheim Erwerb, Gewinn durch Anlegen in Aktien          1
