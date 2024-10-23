@@ -87,6 +87,22 @@ class Umfrage:
             with open(file_path, "w") as export_file:
                 export_file.writelines(file_content)
 
+    def export_alter_zu_wichtikeit_als_korr(self, file_name: str) -> None:
+        file_path= PATH_TO_EXPORT + file_name
+        gerade = self.regressions_gerade('Alter', 'Wichtigkeit_Generell')
+        xachse = self._stichprobe['Alter'].values
+        _, axes = plt.subplots()
+        axes.plot(xachse, self._stichprobe['Wichtigkeit_Generell'].values, linewidth=0, marker='s')
+        # gerade[0](xachse) => f(x)
+        axes.plot(xachse, gerade[0](xachse))
+        axes.set_xlabel("Merkmalsträgeralter")
+        axes.set_ylabel("Wichtikeit der Altersvorsorge von 1 bis 5")
+        axes.set_xlim([15,65])
+        axes.set_ylim([0,6])
+        axes.text(s=gerade[1],x=50,y=5.5)
+        plt.savefig(fname=file_path)
+        plt.close()
+
     def export_alter_zu_eroeffnung_als_korr(self, file_name: str) -> None:
         file_path = PATH_TO_EXPORT + file_name
         gerade = self.regressions_gerade('Alter','Eroeffnung')
@@ -143,6 +159,7 @@ def main():
     ida_2024.export_eroeffnung_als_bar("eroeffnung_bar.pgf")
     #ida_2024.export_motive_konten_als_barh("motive_konto.pgf")
     ida_2024.exports_alter_als_bar("Alter_bar.pgf")
+    ida_2024.export_alter_zu_wichtikeit_als_korr("korr_aler_wichtikeit.pgf")
 
 
 if __name__ == "__main__":
