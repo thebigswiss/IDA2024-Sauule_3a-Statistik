@@ -1,5 +1,7 @@
 import pandas
+from mpl_toolkits.axisartist.axislines import AxesZero
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 import scipy
 
 PATH_TO_DATA = "../urliste/"
@@ -61,7 +63,7 @@ class Umfrage:
 
     def _alter_der_konten(self) -> pandas.Series:
         merkmal: str = "Eroeffnung"
-        bins = pandas.IntervalIndex.from_tuples([(18, 25), (26, 35), (36, 55), (56, 64), (65, 99)], closed="both")
+        bins = pandas.IntervalIndex.from_tuples([(0,14),(15, 23), (24, 32), (33, 41), (42, 60), (61, 99)], closed="both")
         return pandas.cut(self._stichprobe[merkmal], bins).value_counts(sort=False)
 
     def _ziele_der_konten(self) -> pandas.Series:
@@ -87,34 +89,37 @@ class Umfrage:
             with open(file_path, "w") as export_file:
                 export_file.writelines(file_content)
 
+
     def export_alter_zu_wichtikeit_als_korr(self, file_name: str) -> None:
         file_path= PATH_TO_EXPORT + file_name
-        gerade = self.regressions_gerade('Alter', 'Wichtigkeit_Generell')
         xachse = self._stichprobe['Alter'].values
         _, axes = plt.subplots()
+        attention = Rectangle((40,1.5),20,2,fill=False,color='red')
+        axes.add_patch(attention)
+        axes.spines[["left", "bottom"]].set_position(("data", 0))
+        axes.spines[["top", "right"]].set_visible(False)
+        axes.plot(1, 0, ">k", transform=axes.get_yaxis_transform(), clip_on=False)
+        axes.plot(0, 1, "^k", transform=axes.get_xaxis_transform(), clip_on=False)
         axes.plot(xachse, self._stichprobe['Wichtigkeit_Generell'].values, linewidth=0, marker='s')
-        # gerade[0](xachse) => f(x)
-        axes.plot(xachse, gerade[0](xachse))
         axes.set_xlabel("Merkmalsträgeralter")
         axes.set_ylabel("Wichtikeit der Altersvorsorge von 1 bis 5")
-        axes.set_xlim([15,65])
-        axes.set_ylim([0,6])
-        axes.text(s=gerade[1],x=50,y=5.5)
         plt.savefig(fname=file_path)
         plt.close()
 
     def export_alter_zu_eroeffnung_als_korr(self, file_name: str) -> None:
         file_path = PATH_TO_EXPORT + file_name
         gerade = self.regressions_gerade('Alter','Eroeffnung')
-        figure, axes = plt.subplots()
+        _, axes = plt.subplots()
+        axes.spines[["left", "bottom"]].set_position(("data", 0))
+        axes.spines[["top", "right"]].set_visible(False)
+        axes.plot(1, 0, ">k", transform=axes.get_yaxis_transform(), clip_on=False)
+        axes.plot(0, 1, "^k", transform=axes.get_xaxis_transform(), clip_on=False)
         # 1. der X Y Plot mit den Punkten
         axes.plot(self._stichprobe['Alter'].values, self._stichprobe['Eroeffnung'].values, label="Test", linewidth=0, marker='s')
         # 2. Der Regressions Plot
         axes.plot(self._stichprobe['Alter'].values, gerade[0](self._stichprobe['Alter'].values))
         axes.set_xlabel("Merkmalsträgeralter")
         axes.set_ylabel("Merkmalsträgeralter bei der Eröffnung")
-        axes.set_xlim([15,65])
-        axes.set_ylim([15,65])
         axes.text(s=gerade[1],x=40,y=50)
         plt.savefig(fname=file_path)
         plt.close()
@@ -131,10 +136,16 @@ class Umfrage:
 
     def exports_alter_als_bar(self, file_name: str) -> None:
         file_path = PATH_TO_EXPORT + file_name
-        axes = plt.subplot()
-        axes.bar(self._status_der_konten().index.astype(str), self._status_der_konten().values, label="Status der Konten")
+        _, axes = plt.subplots()
+        axes.spines[["left", "bottom"]].set_position(("zero"))
+        axes.spines[["top", "right"]].set_visible(False)
+        axes.plot(1, 0, ">k", transform=axes.get_yaxis_transform(), clip_on=False)
+        axes.plot(0, 1, "^k", transform=axes.get_xaxis_transform(), clip_on=False)
+        axes.bar(self._status_der_konten().index.astype(str), self._status_der_konten().values, label="Status der Konten",align="edge")
         axes.set_ylabel("Anzahl Merkmalsträger")
         # Text mit der Standart abweichung
+        #axes.set_xmargin(0.2)
+        plt.tight_layout() # solves the problem of clipped names
         axes.text(s=self.kennzahlen("Alter")[5], x=2, y=17.5)
         plt.savefig(fname=file_path)
         plt.close()
@@ -143,10 +154,14 @@ class Umfrage:
     def export_eroeffnung_als_bar(self, file_name: str) -> None:
         file_path = PATH_TO_EXPORT + file_name
         axes = plt.subplot()
-        axes.bar(self._alter_der_konten().index.astype(str), self._alter_der_konten().values, label="Kontoeröffnungsjahr")
+        axes.spines[["left", "bottom"]].set_position(("data", 0))
+        axes.spines[["top", "right"]].set_visible(False)
+        axes.plot(1, 0, ">k", transform=axes.get_yaxis_transform(), clip_on=False)
+        axes.plot(0, 1, "^k", transform=axes.get_xaxis_transform(), clip_on=False)
+        axes.bar(self._alter_der_konten().index.astype(str), self._alter_der_konten().values, label="Kontoeröffnungsjahr",align="center")
         axes.set_ylabel("Anzahl der Konten")
         axes.set_xlabel("Zeitintervall in Altersjahren")
-        axes.text(s=self.kennzahlen("Eroeffnung")[5], x=2, y=6)
+        axes.text(s=self.kennzahlen("Eroeffnung")[5], x=4, y=7)
         plt.savefig(fname=file_path)
         plt.close()
 
@@ -154,13 +169,17 @@ def main():
     # Globale Pfade
 
     # Instanziert die Klasse und bereinigt die Daten
-    ida_2024: Umfrage = Umfrage(PATH_TO_DATA + "urliste.tsv")
-    ida_2024.export_alter_zu_eroeffnung_als_korr("korr_alter_eroeffnung.pgf")
-    ida_2024.export_eroeffnung_als_bar("eroeffnung_bar.pgf")
-    #ida_2024.export_motive_konten_als_barh("motive_konto.pgf")
-    ida_2024.exports_alter_als_bar("Alter_bar.pgf")
-    ida_2024.export_alter_zu_wichtikeit_als_korr("korr_aler_wichtikeit.pgf")
+    #TODO: DingsPLot für Alter
 
+    ida_2024: Umfrage = Umfrage(PATH_TO_DATA + "urliste.tsv")
+    ida_2024.export_alter_zu_eroeffnung_als_korr("korr_alter_eroeffnung.png")
+    ida_2024.export_eroeffnung_als_bar("eroeffnung_bar.png")
+    #ida_2024.export_motive_konten_als_barh("motive_konto.pgf")
+    ida_2024.exports_alter_als_bar("Alter_bar.png")
+    ida_2024.export_alter_zu_wichtikeit_als_korr("korr_aler_wichtikeit.png")
+    ida_2024.export_to_file("Alter_Kennzahlen.txt",ida_2024.kennzahlen('Alter'))
+    ida_2024.export_to_file("Eroeffnung_Kennzahlen.txt",ida_2024.kennzahlen('Eroeffnung'))
+    ida_2024.export_to_file("Wichtigkeit_Generell_Kennzahlen.txt",ida_2024.kennzahlen('Wichtigkeit_Generell'))
 
 if __name__ == "__main__":
     main()
